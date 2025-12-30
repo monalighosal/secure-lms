@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile - Secure LMS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        .profile-card {
+            border-radius: 12px;
+            border: none;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+        .profile-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px 12px 0 0;
+            padding: 30px;
+            text-align: center;
+        }
+        .profile-stats {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 0 0 12px 12px;
+        }
+        .stat-card {
+            text-align: center;
+            padding: 15px;
+        }
+        .stat-card i {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+        .vuln-banner {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="text-center mb-4">
+            <h4><i class="fas fa-graduation-cap me-2"></i>Secure LMS</h4>
+            <p class="small mb-0">Security Training Platform</p>
+        </div>
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link" href="/dashboard"><i class="fas fa-home me-2"></i>Dashboard</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/courses"><i class="fas fa-book me-2"></i>Courses</a>
+            </li>
+            <li class="nav-item" id="adminLink" style="display: none;">
+                <a class="nav-link" href="/admin"><i class="fas fa-cogs me-2"></i>Admin Panel</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/logout"><i class="fas fa-sign-out-alt me-2"></i>Logout</a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <div class="vuln-banner">
+            <h5><i class="fas fa-exclamation-triangle me-2"></i>IDOR Vulnerability Notice</h5>
+            <p class="mb-0">This page demonstrates IDOR (Insecure Direct Object Reference) vulnerabilities. Try changing the user ID in the URL to access other users' profiles.</p>
+        </div>
+
+        <div class="card profile-card">
+            <div class="profile-header">
+                <h2 id="profileName">User Profile</h2>
+                <p class="mb-0" id="profileRole">Role: Loading...</p>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="mb-3">
+                            <label class="form-label">Username:</label>
+                            <p id="profileUsername" class="form-control-plaintext">Loading...</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email:</label>
+                            <p id="profileEmail" class="form-control-plaintext">Loading...</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">User ID:</label>
+                            <p id="profileId" class="form-control-plaintext">Loading...</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Account Created:</label>
+                            <p id="profileCreated" class="form-control-plaintext">Loading...</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header bg-white">
+                                <h5>Quick Stats</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-6">
+                                        <div class="stat-card">
+                                            <i class="fas fa-book text-primary"></i>
+                                            <h4 id="coursesCount">0</h4>
+                                            <small>Courses</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="stat-card">
+                                            <i class="fas fa-tasks text-success"></i>
+                                            <h4 id="progressCount">0</h4>
+                                            <small>Progress</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    <!-- Comments section with XSS vulnerability -->
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5>Comments</h5>
+        </div>
+        <div class="card-body">
+            <div id="commentsList">
+                <!-- Comments will be loaded here -->
+            </div>
+            <form id="commentForm" class="mt-3">
+                <div class="mb-3">
+                    <label for="commentInput" class="form-label">Add Comment:</label>
+                    <textarea class="form-control" id="commentInput" rows="3" placeholder="Enter your comment"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Add Comment</button>
+            </form>
+        </div>
+    </div>
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Extract user ID from URL
+    const urlParts = window.location.pathname.split('/');
+    const userId = urlParts[urlParts.indexOf('user') + 1];
+    
+    // Load user profile
+    async function loadUserProfile() {
+        try {
+            const response = await fetch(`/api/users/${userId}`);
+            if (response.ok) {
+                const user = await response.json();
+                document.getElementById('profileName').textContent = user.username;
+                document.getElementById('profileUsername').textContent = user.username;
+                document.getElementById('profileEmail').textContent = user.email;
+                document.getElementById('profileId').textContent = user.id;
+                document.getElementById('profileRole').textContent = `Role: ${user.role}`;
+                document.getElementById('profileCreated').textContent = user.created_at;
+            } else {
+                document.getElementById('profileName').textContent = 'User Not Found';
+                document.getElementById('profileUsername').textContent = 'User Not Found';
+                document.getElementById('profileEmail').textContent = 'User Not Found';
+                document.getElementById('profileId').textContent = 'N/A';
+                document.getElementById('profileRole').textContent = 'Role: N/A';
+                document.getElementById('profileCreated').textContent = 'N/A';
+            }
+        } catch (error) {
+            console.error('Error loading user profile:', error);
+            document.getElementById('profileName').textContent = 'Error Loading Profile';
+        }
+    }
+
+    // Load comments for the user
+    async function loadComments() {
+        try {
+            const response = await fetch(`/api/comments/${userId}`);
+            if (response.ok) {
+                const comments = await response.json();
+                const commentsList = document.getElementById('commentsList');
+                commentsList.innerHTML = '';
+                
+                comments.forEach(comment => {
+                    // PATCHED: Properly sanitize content to prevent XSS
+                    const commentElement = document.createElement('div');
+                    commentElement.className = 'alert alert-secondary';
+                    
+                    // Create elements and use textContent to prevent XSS
+                    const authorElement = document.createElement('strong');
+                    authorElement.textContent = comment.author;
+                    
+                    const colonElement = document.createTextNode(': ');
+                    
+                    const contentElement = document.createElement('span');
+                    contentElement.textContent = comment.content;
+                    
+                    commentElement.appendChild(authorElement);
+                    commentElement.appendChild(colonElement);
+                    commentElement.appendChild(contentElement);
+                    
+                    commentsList.appendChild(commentElement);
+                });
+            }
+        } catch (error) {
+            console.error('Error loading comments:', error);
+        }
+    }
+    
+    // Submit comment form
+    document.getElementById('commentForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const commentInput = document.getElementById('commentInput');
+        const content = commentInput.value;
+        
+        if (content.trim()) {
+            try {
+                const response = await fetch('/api/comments', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        userId: userId,
+                        content: content
+                    })
+                });
+                
+                if (response.ok) {
+                    commentInput.value = '';
+                    loadComments(); // Reload comments
+                }
+            } catch (error) {
+                console.error('Error submitting comment:', error);
+            }
+        }
+    });
+
+    // Check if user is admin and show admin panel link
+    fetch('/api/user')
+    .then(response => response.json())
+    .then(user => {
+        if (user && user.role === 'admin') {
+            document.getElementById('adminLink').style.display = 'block';
+        }
+    })
+    .catch(error => {
+        console.error('Error checking user role:', error);
+    });
+
+    // Load user profile and comments when page loads
+    document.addEventListener('DOMContentLoaded', () => {
+        loadUserProfile();
+        loadComments();
+    });
+</script>
+</body>
+</html>

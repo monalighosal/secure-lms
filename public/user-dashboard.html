@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Secure LMS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .sidebar {
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 250px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 0;
+            box-shadow: 3px 0 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+        .sidebar .nav-link {
+            color: rgba(255,255,255,0.8);
+            padding: 12px 20px;
+            margin: 5px 10px;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+        }
+        .card {
+            border-radius: 12px;
+            border: none;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            transition: transform 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            text-align: center;
+            padding: 20px;
+        }
+        .stat-card i {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+        .vuln-banner {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .current-user-info {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="text-center mb-4">
+            <h4><i class="fas fa-graduation-cap me-2"></i>Secure LMS</h4>
+            <p class="small mb-0">Security Training Platform</p>
+        </div>
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link active" href="/dashboard"><i class="fas fa-home me-2"></i>Dashboard</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/courses"><i class="fas fa-book me-2"></i>Courses</a>
+            </li>
+            <li class="nav-item" id="adminLink" style="display: none;">
+                <a class="nav-link" href="/admin"><i class="fas fa-cogs me-2"></i>Admin Panel</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/logout"><i class="fas fa-sign-out-alt me-2"></i>Logout</a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <div class="current-user-info">
+            <h5><i class="fas fa-user me-2"></i>Currently Viewing User Profile</h5>
+            <p class="mb-0">Username: <strong id="currentUsername">Loading...</strong> | 
+            User ID: <strong id="currentUserId">Loading...</strong> | 
+            Role: <strong id="currentUserRole">Loading...</strong></p>
+        </div>
+
+        <div class="vuln-banner">
+            <h5><i class="fas fa-exclamation-triangle me-2"></i>Security Training Notice</h5>
+            <p class="mb-0">This system contains intentional vulnerabilities for educational purposes.</p>
+        </div>
+
+        <div class="header">
+            <h2>Welcome, <span id="welcomeUsername">User</span>!</h2>
+            <p class="mb-0">Track your learning progress and access your courses</p>
+        </div>
+
+        <div class="row">
+            <div class="col-md-3">
+                <div class="card stat-card">
+                    <i class="fas fa-book-open text-primary"></i>
+                    <h3 id="coursesCount">0</h3>
+                    <p class="text-muted">Courses Enrolled</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card">
+                    <i class="fas fa-tasks text-success"></i>
+                    <h3 id="completedLessons">0</h3>
+                    <p class="text-muted">Lessons Completed</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card">
+                    <i class="fas fa-clipboard-list text-warning"></i>
+                    <h3 id="assignmentsCount">0</h3>
+                    <p class="text-muted">Assignments</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card">
+                    <i class="fas fa-certificate text-info"></i>
+                    <h3 id="certificatesCount">0</h3>
+                    <p class="text-muted">Certificates</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header bg-white">
+                        <h5>Recent Activity</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="timeline">
+                            <div class="timeline-item">
+                                <h6><i class="fas fa-check-circle text-success me-2"></i> Welcome to Secure LMS</h6>
+                                <p class="text-muted small">Start exploring the security vulnerabilities in this educational platform</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header bg-white">
+                        <h5>User Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">Access other user dashboards by changing the user ID in the URL.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Extract user ID from URL
+        const urlParts = window.location.pathname.split('/');
+        const userId = urlParts[urlParts.indexOf('dashboard') + 1];
+        
+        // Function to load user data
+        async function loadUserData() {
+            try {
+                const response = await fetch(`/api/users/${userId}`);
+                if (response.ok) {
+                    const user = await response.json();
+                    
+                    // Update the welcome message with the username
+                    document.getElementById('welcomeUsername').textContent = user.username || 'Unknown User';
+                    document.getElementById('currentUsername').textContent = user.username || 'Unknown';
+                    document.getElementById('currentUserId').textContent = user.id || 'N/A';
+                    document.getElementById('currentUserRole').textContent = user.role || 'N/A';
+                    
+                    // Update stats (simulated - in real app would fetch from API)
+                    document.getElementById('coursesCount').textContent = '3';
+                    document.getElementById('completedLessons').textContent = '12';
+                    document.getElementById('assignmentsCount').textContent = '5';
+                    document.getElementById('certificatesCount').textContent = '1';
+                } else {
+                    document.getElementById('welcomeUsername').textContent = 'Unknown User';
+                    document.getElementById('currentUsername').textContent = 'Unknown';
+                    document.getElementById('currentUserId').textContent = 'N/A';
+                    document.getElementById('currentUserRole').textContent = 'N/A';
+                }
+            } catch (error) {
+                console.error('Error loading user data:', error);
+                document.getElementById('welcomeUsername').textContent = 'Error Loading';
+            }
+        }
+        
+        // Check if user is admin and show admin panel link
+        fetch('/api/user')
+        .then(response => response.json())
+        .then(user => {
+            if (user && user.role === 'admin') {
+                document.getElementById('adminLink').style.display = 'block';
+            }
+        })
+        .catch(error => {
+            console.error('Error checking user role:', error);
+        });
+        
+        // Function to view own profile
+        function viewOwnProfile() {
+            const currentUserId = document.getElementById('currentUserId').textContent;
+            window.location.href = `/user/${currentUserId}`;
+        }
+        
+        // Function to view other profile
+        function viewOtherProfile() {
+            const otherId = prompt('Enter user ID to view their profile:', '2');
+            if (otherId) {
+                window.location.href = `/user/${otherId}`;
+            }
+        }
+        
+        // Function to demonstrate IDOR
+        function tryIDOR() {
+            const targetId = prompt('Enter user ID to access their dashboard:', '1');
+            if (targetId) {
+                window.location.href = `/dashboard/${targetId}`;
+            }
+        }
+        
+        // Load user data when page loads
+        document.addEventListener('DOMContentLoaded', loadUserData);
+    </script>
+</body>
+</html>

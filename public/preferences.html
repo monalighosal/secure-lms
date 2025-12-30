@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preferences - Secure LMS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .sidebar {
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 250px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 0;
+            box-shadow: 3px 0 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+        .sidebar .nav-link {
+            color: rgba(255,255,255,0.8);
+            padding: 12px 20px;
+            margin: 5px 10px;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+        }
+        .card {
+            border-radius: 12px;
+            border: none;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+        .vuln-banner {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .code-block {
+            background-color: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="text-center mb-4">
+            <h4><i class="fas fa-graduation-cap me-2"></i>Secure LMS</h4>
+            <p class="small mb-0">Security Training Platform</p>
+        </div>
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link" href="/dashboard"><i class="fas fa-home me-2"></i>Dashboard</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/courses"><i class="fas fa-book me-2"></i>Courses</a>
+            </li>
+            <li class="nav-item" id="adminLink" style="display: none;">
+                <a class="nav-link" href="/admin"><i class="fas fa-cogs me-2"></i>Admin Panel</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/logout"><i class="fas fa-sign-out-alt me-2"></i>Logout</a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <div class="vuln-banner">
+            <h5><i class="fas fa-exclamation-triangle me-2"></i>Insecure Deserialization Vulnerability</h5>
+            <p class="mb-0">This page demonstrates insecure deserialization. Importing preferences from untrusted sources can lead to prototype pollution and code execution.</p>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5>Import User Preferences</h5>
+            </div>
+            <div class="card-body">
+                <form id="preferencesForm">
+                    <div class="mb-3">
+                        <label for="preferences" class="form-label">Preferences JSON</label>
+                        <textarea class="form-control" id="preferences" name="preferences" rows="8" placeholder='{"theme": "dark", "language": "en", "notifications": true}' required></textarea>
+                        <div class="form-text">Enter JSON preferences to import</div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Import Preferences</button>
+                </form>
+                
+                <div class="mt-4">
+                    <h6>Example Malicious Payloads:</h6>
+                    <div class="code-block">
+                        // Prototype pollution example:<br>
+                        {"theme": "dark", "__proto__": {"polluted": "vulnerable"}}
+                    </div>
+                    <div class="mt-3">
+                        <div class="code-block">
+                            // More complex prototype pollution:<br>
+                            {"theme": "light", "constructor": {"prototype": {"polluted": "vulnerable"}}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5>Security Explanation</h5>
+            </div>
+            <div class="card-body">
+                <p>This application is vulnerable to insecure deserialization because it uses <code>JSON.parse()</code> directly on user input without proper validation or sanitization.</p>
+                <p><strong>How the vulnerability works:</strong></p>
+                <ul>
+                    <li>User input is directly parsed using <code>JSON.parse()</code></li>
+                    <li>No validation or sanitization of the parsed object</li>
+                    <li>Allows for prototype pollution attacks</li>
+                    <li>Could potentially lead to code execution in some contexts</li>
+                </ul>
+                <p><strong>Impact:</strong> An attacker can manipulate object prototypes, potentially causing application instability, information disclosure, or remote code execution.</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('preferencesForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const preferences = document.getElementById('preferences').value;
+            
+            const response = await fetch('/api/preferences/import', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `preferences=${encodeURIComponent(preferences)}`
+            });
+            
+            const result = await response.json();
+            if (response.ok) {
+                alert('Preferences imported successfully');
+            } else {
+                alert('Error: ' + result.error);
+            }
+        });
+
+        // Check if user is admin and show admin panel link
+        fetch('/api/user')
+        .then(response => response.json())
+        .then(user => {
+            if (user && user.role === 'admin') {
+                document.getElementById('adminLink').style.display = 'block';
+            }
+        })
+        .catch(error => {
+            console.error('Error checking user role:', error);
+        });
+    </script>
+</body>
+</html>
